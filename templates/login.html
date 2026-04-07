@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="card bg-dark border-secondary shadow-lg">
+            <div class="card-body p-5">
+                <div class="text-center mb-5">
+                    <i class="fas fa-cloud fa-4x text-primary mb-3"></i>
+                    <h2 class="text-light fw-bold">Session Stealer</h2>
+                    <p class="text-muted">Вход в панель</p>
+                </div>
+                
+                <form method="post">
+                    <div class="mb-4">
+                        <label class="form-label text-light">Логин</label>
+                        <input type="text" 
+                               class="form-control bg-dark text-light border-secondary" 
+                               name="username" 
+                               placeholder="Введите логин" 
+                               required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-light">Пароль</label>
+                        <input type="password" 
+                               class="form-control bg-dark text-light border-secondary" 
+                               name="password" 
+                               placeholder="Введите пароль" 
+                               required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-medium">
+                        <i class="fas fa-sign-in-alt me-2"></i>Войти
+                    </button>
+                </form>
+
+                <div class="mt-4 text-center small">
+                    <div class="text-muted mb-2">Тестовые аккаунты:</div>
+                    <div class="bg-secondary bg-opacity-10 rounded p-3 text-start">
+                        <span class="text-info"></span> / <span class="text-info"></span><br><br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
