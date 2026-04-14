@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-light fw-semibold">Список зеркал</h1>
+    {% if is_admin %}
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSiteModal">
+        <i class="fas fa-plus me-2"></i>Добавить зеркало
+    </button>
+    {% endif %}
+</div>
+
+<div class="card bg-dark border-secondary shadow">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 modern-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Ссылка</th>
+                    {% if is_admin %}
+                    <th class="text-end">Действия</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for site in sites %}
+                <tr>
+                    <td><strong>{{ site.name }}</strong></td>
+                    <td>
+                        <a href="{{ site.url }}" target="_blank" class="text-info text-break">
+                            {{ site.url }}
+                        </a>
+                    </td>
+                    {% if is_admin %}
+                    <td class="text-end">
+                        <a href="{{ url_for('delete_site_route', index=loop.index0) }}" 
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Удалить {{ site.name }}?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center py-5 text-muted">
+                        <i class="fas fa-globe fa-3x mb-3 opacity-50"></i><br>
+                        Список зеркал пока пуст
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Модальное окно добавления -->
+<div class="modal fade" id="addSiteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить новое зеркало</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url_for('add_site') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control bg-dark text-light" name="name" 
+                               placeholder="Название (например: Google Mirror)" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="url" class="form-control bg-dark text-light" name="url" 
+                               placeholder="https://mirror-example.com" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
