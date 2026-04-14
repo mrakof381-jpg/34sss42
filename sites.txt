@@ -1,0 +1,2 @@
+blsp.at|https://blsp.at
+slon3.at|https://slon3.at
