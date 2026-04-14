@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">{{ filename }}</h4>
+<pre class="bg-dark p-4 rounded border border-secondary" style="white-space: pre-wrap; max-height: 70vh; overflow-y: auto;">{{ content }}</pre>
+{% endblock %}
