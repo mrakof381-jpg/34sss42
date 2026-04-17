@@ -1,42 +1,89 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
-    <div class="text-center" style="width: 320px;">
+<div class="d-flex justify-content-center align-items-center min-vh-100 bg-gradient" 
+     style="background: radial-gradient(circle at center, #1a1f2e 0%, #0f121b 70%);">
+
+    <div class="text-center" style="width: 360px;">
 
         <!-- Форма входа -->
         <div id="loginFormContainer">
-            <h2 class="text-light mb-4 fw-bold">Вход в панель</h2>
-            
+
+            <!-- Логотип -->
+            <div class="mb-5">
+                <div class="mx-auto mb-3 d-flex justify-content-center align-items-center" 
+                     style="width: 96px; height: 96px; background: linear-gradient(135deg, #00d4ff, #3b82f6); 
+                            border-radius: 24px; box-shadow: 0 0 40px rgba(0, 212, 255, 0.4);">
+                    <span style="font-size: 42px; font-weight: 700; color: white; letter-spacing: -2px;">SP</span>
+                </div>
+                <h1 class="text-white fw-bold mb-1" style="font-size: 2.1rem; letter-spacing: -1px;">
+                    SESSION PANEL
+                </h1>
+                <p class="text-secondary">Панель управления</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} text-start py-2 small" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <form id="loginForm" method="POST" action="{{ url_for('login') }}">
                 <div class="mb-3">
-                    <input type="text" class="form-control form-control-lg bg-dark text-light border-secondary" 
-                           name="username" placeholder="Логин" required autofocus>
+                    <input type="text" 
+                           class="form-control form-control-lg bg-dark border-0 text-light py-3 px-4 rounded-4"
+                           style="box-shadow: 0 4px 15px rgba(0,0,0,0.3);"
+                           name="username" 
+                           placeholder="Логин" 
+                           required autofocus>
                 </div>
+                
                 <div class="mb-4">
-                    <input type="password" class="form-control form-control-lg bg-dark text-light border-secondary" 
-                           name="password" placeholder="Пароль" required>
+                    <input type="password" 
+                           class="form-control form-control-lg bg-dark border-0 text-light py-3 px-4 rounded-4"
+                           style="box-shadow: 0 4px 15px rgba(0,0,0,0.3);"
+                           name="password" 
+                           placeholder="Пароль" 
+                           required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
-                    Войти
+
+                <button type="submit" 
+                        class="btn btn-primary btn-lg w-100 py-3 rounded-4 fw-semibold fs-5"
+                        id="submitBtn"
+                        style="background: linear-gradient(90deg, #00d4ff, #3b82f6); border: none; box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);">
+                    Войти в систему
                 </button>
             </form>
+
+            <div class="mt-4">
+                <small class="text-muted">version -1.04</small>
+            </div>
         </div>
 
         <!-- Экран загрузки -->
         <div id="loaderContainer" style="display: none;">
-            <div class="mb-4">
-                <img src="https://i.ibb.co/0jZ7Z7Z/session-logo.png" alt="Session Panel" width="110">
+            <div class="mb-5">
+                <div class="mx-auto mb-4 d-flex justify-content-center align-items-center" 
+                     style="width: 110px; height: 110px; background: linear-gradient(135deg, #00d4ff, #3b82f6); 
+                            border-radius: 28px; box-shadow: 0 0 50px rgba(0, 212, 255, 0.5);">
+                    <span style="font-size: 48px; font-weight: 700; color: white; letter-spacing: -3px;">SP</span>
+                </div>
+                <h2 class="text-white fw-bold mb-2" style="font-size: 1.95rem;">SESSION PANEL</h2>
             </div>
-            <h3 class="text-light fw-bold mb-4">SESSION PANEL</h3>
-            
-            <!-- Прогресс бар -->
-            <div class="progress mb-3" style="height: 6px;">
-                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
-                     role="progressbar" style="width: 0%"></div>
+
+            <div class="progress mb-4" style="height: 6px; background: rgba(255,255,255,0.08); border-radius: 9999px; overflow: hidden;">
+                <div id="progressBar" 
+                     class="progress-bar bg-gradient"
+                     style="width: 0%; height: 100%; background: linear-gradient(90deg, #00d4ff, #60a5fa); 
+                            box-shadow: 0 0 20px #00d4ff;">
+                </div>
             </div>
             
-            <p class="text-muted" id="loadingText">Проверка доступа...</p>
+            <p class="text-secondary fw-medium" id="loadingText">Проверка доступа...</p>
         </div>
 
     </div>
@@ -45,29 +92,40 @@
 
 {% block scripts %}
 <script>
-document.getElementById('loginForm').addEventListener('submit', function() {
-    // Скрываем форму
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.85';
+    submitBtn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-3" role="status"></span>
+        Авторизация...
+    `;
+
     document.getElementById('loginFormContainer').style.display = 'none';
-    // Показываем загрузку
     document.getElementById('loaderContainer').style.display = 'block';
 
-    // Анимация прогресс-бара
     let progress = 0;
     const progressBar = document.getElementById('progressBar');
     const loadingText = document.getElementById('loadingText');
-    
+
+    const texts = [
+        "Проверка доступа...",
+        "Загрузка сессии...",
+        "Проверка прав...",
+        "Инициализация окружения..."
+    ];
+    let idx = 0;
+
     const interval = setInterval(() => {
-        progress += Math.random() * 12;
-        if (progress > 92) progress = 92;
+        progress += Math.random() * 11 + 5;
+        if (progress > 97) progress = 97;
+
         progressBar.style.width = progress + '%';
-        
-        if (progress > 65) {
-            loadingText.textContent = "Загрузка сессии...";
-        }
-        if (progress > 85) {
-            loadingText.textContent = "Проверка прав доступа...";
-        }
-    }, 80);
+
+        if (progress > 28 && idx === 0) { loadingText.textContent = texts[1]; idx = 1; }
+        if (progress > 58 && idx === 1) { loadingText.textContent = texts[2]; idx = 2; }
+        if (progress > 82 && idx === 2) { loadingText.textContent = texts[3]; idx = 3; }
+    }, 85);
 });
 </script>
 {% endblock %}
