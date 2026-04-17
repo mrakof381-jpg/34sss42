@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 text-light fw-semibold">Список зеркал</h1>
@@ -33,7 +32,7 @@
                     </td>
                     {% if is_admin %}
                     <td class="text-end">
-                        <a href="{{ url_for('delete_site_route', index=loop.index0) }}" 
+                        <a href="{{ url_for('delete_site', index=loop.index0) }}"
                            class="btn btn-sm btn-outline-danger"
                            onclick="return confirm('Удалить {{ site.name }}?')">
                             <i class="fas fa-trash"></i>
@@ -65,11 +64,11 @@
             <form method="post" action="{{ url_for('add_site') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <input type="text" class="form-control bg-dark text-light" name="name" 
+                        <input type="text" class="form-control bg-dark text-light" name="name"
                                placeholder="Название (например: Google Mirror)" required>
                     </div>
                     <div class="mb-3">
-                        <input type="url" class="form-control bg-dark text-light" name="url" 
+                        <input type="url" class="form-control bg-dark text-light" name="url"
                                placeholder="https://mirror-example.com" required>
                     </div>
                 </div>
