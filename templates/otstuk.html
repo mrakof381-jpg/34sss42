@@ -3,7 +3,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 text-light fw-semibold">Отстук (login:password)</h1>
-    {% if logs %}
+    {% if is_admin and logs %}
     <button class="btn btn-outline-danger btn-sm" onclick="clearLogs()">
         <i class="fas fa-trash"></i> Очистить логи
     </button>
@@ -36,8 +36,7 @@
                 {% else %}
                 <tr>
                     <td colspan="4" class="text-center py-5 text-muted">
-                        <i class="fas fa-key fa-3x mb-3 opacity-50"></i><br>
-                        Пока нет украденных данных
+                        Пока нет данных
                     </td>
                 </tr>
                 {% endfor %}
@@ -50,9 +49,17 @@
 {% block scripts %}
 <script>
 function clearLogs() {
-    if (confirm('Вы действительно хотите очистить все логи отстука?')) {
-        fetch('/clear_otstuk', { method: 'POST' })
-            .then(() => location.reload());
+    if (confirm('Вы уверены, что хотите полностью очистить все логи отстука?')) {
+        fetch('/clear_otstuk', { 
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        })
+        .catch(err => console.error(err));
     }
 }
 </script>
