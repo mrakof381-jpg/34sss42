@@ -221,15 +221,10 @@ def otstuk_post():
 @login_required
 def clear_otstuk():
     if getattr(current_user, 'role', None) != 'admin':
-        flash('Доступ запрещён', 'danger')
-        return redirect(url_for('otstuk'))
-    
+        return "Access denied", 403
     try:
-        open(LOGS_FILE, 'w', encoding='utf-8').close()  # Очищаем файл
-        flash('Логи успешно очищены', 'success')
+        open(LOGS_FILE, 'w', encoding='utf-8').close()
+        return "OK", 200
     except:
-        flash('Ошибка при очистке логов', 'danger')
-    
-    return redirect(url_for('otstuk'))
-if __name__ == '__main__':
+        return "Error", 500
     app.run(debug=True, host='0.0.0.0', port=5000)
