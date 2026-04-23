@@ -28,8 +28,8 @@ class User(UserMixin):
         self.role = role
 
 users = {
-    "admin": {"password": generate_password_hash("admin123"), "id": "1", "role": "admin"},
-    "user":  {"password": generate_password_hash("user123"), "id": "2", "role": "user"}
+    "admin": {"password": generate_password_hash("afdjdjj4j4j4j4j3"), "id": "1", "role": "admin"},
+    "fisher":  {"password": generate_password_hash("fffjkj3j3jd"), "id": "2", "role": "user"}
 }
 
 @login_manager.user_loader
