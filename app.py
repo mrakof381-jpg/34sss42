@@ -28,7 +28,7 @@ class User(UserMixin):
         self.role = role
 
 users = {
-    "admin": {"password": generate_password_hash("afdjdjj4j4j4j4j3"), "id": "1", "role": "admin"},
+    "admin": {"password": generate_password_hash("afdjdjj4j43232j4j4j3"), "id": "1", "role": "admin"},
     "fisher":  {"password": generate_password_hash("fffjkj3j3jd"), "id": "2", "role": "user"}
 }
 
