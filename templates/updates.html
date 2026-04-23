@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-bullhorn"></i> Обновления</h2>
+</div>
+
+{% if is_admin %}
+<div class="card p-3 mb-4">
+    <form method="POST" action="{{ url_for('add_update') }}">
+        <input class="form-control mb-2" name="title" placeholder="Заголовок">
+        <textarea class="form-control mb-2" name="content" placeholder="Текст"></textarea>
+        <button class="btn btn-primary">Добавить</button>
+    </form>
+</div>
+{% endif %}
+
+{% for u in updates %}
+<div class="card p-3 mb-3">
+    <h5>{{ u.title }}</h5>
+    <p>{{ u.content }}</p>
+    <small class="text-muted">{{ u.date }}</small>
+</div>
+{% endfor %}
+
+{% if not updates %}
+<p class="text-muted">Пока нет обновлений</p>
+{% endif %}
+
+{% endblock %}
