@@ -94,7 +94,7 @@ def create_default_admin():
         )
         db.session.add(admin)
         db.session.commit()
-        print("✅ Администратор по умолчанию создан: admin / admin123")
+        print("✅")
 
 
 # ====================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ======================
