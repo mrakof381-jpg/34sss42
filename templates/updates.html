@@ -1,30 +1,74 @@
 {% extends "base.html" %}
+
 {% block content %}
-
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-bullhorn"></i> Обновления</h2>
+    <h1 class="h3 text-light fw-semibold">Обновления панели</h1>
+    {% if is_admin %}
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUpdateModal">
+        <i class="fas fa-plus"></i> Добавить обновление
+    </button>
+    {% endif %}
 </div>
 
-{% if is_admin %}
-<div class="card p-3 mb-4">
-    <form method="POST" action="{{ url_for('add_update') }}">
-        <input class="form-control mb-2" name="title" placeholder="Заголовок">
-        <textarea class="form-control mb-2" name="content" placeholder="Текст"></textarea>
-        <button class="btn btn-primary">Добавить</button>
-    </form>
+<div class="row">
+    {% for update in updates %}
+    <div class="col-12 mb-4">
+        <div class="card bg-dark border-info shadow">
+            <div class="card-header bg-info text-dark fw-semibold">
+                {{ update.title }}
+                <small class="float-end text-dark">
+                    {{ update.created_at.strftime('%d.%m.%Y %H:%M') }} • {{ update.author }}
+                </small>
+            </div>
+            <div class="card-body text-light">
+                <p style="white-space: pre-wrap;">{{ update.content }}</p>
+            </div>
+            {% if is_admin %}
+            <div class="card-footer bg-dark border-top border-secondary">
+                <a href="{{ url_for('delete_update', update_id=update.id) }}" 
+                   class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Удалить это обновление?')">
+                    <i class="fas fa-trash"></i> Удалить
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-newspaper fa-3x mb-3 opacity-50"></i>
+            <h5>Пока нет обновлений</h5>
+        </div>
+    </div>
+    {% endfor %}
 </div>
-{% endif %}
 
-{% for u in updates %}
-<div class="card p-3 mb-3">
-    <h5>{{ u.title }}</h5>
-    <p>{{ u.content }}</p>
-    <small class="text-muted">{{ u.date }}</small>
+<!-- Модальное окно добавления обновления -->
+<div class="modal fade" id="addUpdateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title">Новое обновление</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url_for('add_update') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control bg-dark text-light" name="title" 
+                               placeholder="Заголовок обновления" required>
+                    </div>
+                    <div class="mb-3">
+                        <textarea class="form-control bg-dark text-light" name="content" rows="6" 
+                                  placeholder="Текст обновления..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Опубликовать обновление</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-{% endfor %}
-
-{% if not updates %}
-<p class="text-muted">Пока нет обновлений</p>
-{% endif %}
-
 {% endblock %}
