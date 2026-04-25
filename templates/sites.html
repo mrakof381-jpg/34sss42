@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 text-light fw-semibold">Список зеркал</h1>
@@ -12,7 +13,7 @@
 <div class="card bg-dark border-secondary shadow">
     <div class="card-body p-0">
         <table class="table table-hover mb-0 modern-table">
-            <thead>
+            <thead class="table-dark">
                 <tr>
                     <th>Название</th>
                     <th>Ссылка</th>
@@ -53,7 +54,7 @@
     </div>
 </div>
 
-<!-- Модальное окно добавления -->
+<!-- Модальное окно добавления зеркала -->
 <div class="modal fade" id="addSiteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content bg-dark text-light border-secondary">
@@ -64,12 +65,12 @@
             <form method="post" action="{{ url_for('add_site') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <input type="text" class="form-control bg-dark text-light" name="name"
-                               placeholder="Название (например: Google Mirror)" required>
+                        <input type="text" class="form-control bg-dark text-light" name="name" 
+                               placeholder="Название зеркала" required>
                     </div>
                     <div class="mb-3">
-                        <input type="url" class="form-control bg-dark text-light" name="url"
-                               placeholder="https://mirror-example.com" required>
+                        <input type="url" class="form-control bg-dark text-light" name="url" 
+                               placeholder="https://example.com" required>
                     </div>
                 </div>
                 <div class="modal-footer">
