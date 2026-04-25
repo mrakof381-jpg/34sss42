@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-light">Создание нового пользователя</h2>
+    <a href="{{ url_for('users_page') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Назад к списку
+    </a>
+</div>
+
+<div class="card bg-dark border-secondary shadow">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-light">Логин</label>
+                    <input type="text" name="username" class="form-control bg-dark text-light" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-light">Пароль</label>
+                    <input type="password" name="password" class="form-control bg-dark text-light" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-light">Роль</label>
+                <select name="role" class="form-select bg-dark text-light">
+                    <option value="user">Обычный пользователь</option>
+                    <option value="admin">Администратор</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label text-light">Доступные вкладки</label>
+                <div class="row g-2">
+                    {% for tab in available_tabs %}
+                    <div class="col-6 col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="allowed_tabs" value="{{ tab }}" id="tab_{{ tab }}" checked>
+                            <label class="form-check-label text-light" for="tab_{{ tab }}">
+                                {{ {
+                                    'files': 'Session Hijacking',
+                                    'rassylka': 'Рассылка',
+                                    'sites': 'Список зеркал',
+                                    'status': 'Статус проекта',
+                                    'otstuk': 'Отстук'
+                                }.get(tab, tab|title) }}
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-user-plus"></i> Создать пользователя
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
