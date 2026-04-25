@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-light fw-semibold">Рассылка</h1>
+</div>
+
+<div class="row g-4">
+    <!-- База аккаунтов -->
+    <div class="col-lg-6">
+        <div class="card bg-dark border-secondary shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-users"></i> База аккаунтов (login:password)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-light mb-3">Загружено аккаунтов: <strong class="text-info">{{ accounts_count }}</strong></p>
+                
+                <form method="POST" action="{{ url_for('upload_accounts') }}" enctype="multipart/form-data">
+                    <input type="file" name="accounts_file" class="form-control bg-dark text-light border-secondary mb-3" accept=".txt" required>
+                    <button type="submit" class="btn btn-primary w-100">Загрузить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- База шопов -->
+    <div class="col-lg-6">
+        <div class="card bg-dark border-secondary shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-store"></i> База шопов (slon4.at/shop/...)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-light mb-3">Загружено шопов: <strong class="text-info">{{ shops_count }}</strong></p>
+                
+                <form method="POST" action="{{ url_for('upload_shops') }}" enctype="multipart/form-data">
+                    <input type="file" name="shops_file" class="form-control bg-dark text-light border-secondary mb-3" accept=".txt" required>
+                    <button type="submit" class="btn btn-primary w-100">Загрузить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Форма рассылки -->
+    <div class="col-12">
+        <div class="card bg-dark border-secondary shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-paper-plane"></i> Сообщение для рассылки</h5>
+            </div>
+            <div class="card-body">
+                <textarea id="messageText" class="form-control bg-dark text-light border-secondary" 
+                          rows="8" 
+                          placeholder="Введите текст сообщения, которое будет отправлено..."></textarea>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-light">Режим рассылки</label>
+                        <select id="sendMode" class="form-select bg-dark text-light">
+                            <option value="all">Регулярная рассылка</option>
+                            <option value="shops">Одноразовая</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-light">Задержка между сообщениями (сек)</label>
+                        <input type="number" id="delay" class="form-control bg-dark text-light" value="8" min="3" max="60">
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                    <button class="btn btn-outline-info me-md-2" onclick="testSend()">Turbo (Не рекомендуется)</button>
+                    <button class="btn btn-success" onclick="startMassSend()">Запустить рассылку</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function testSend() {
+    const message = document.getElementById('messageText').value.trim();
+    if (!message) {
+        alert("Сначала введите текст сообщения!");
+        return;
+    }
+    alert("Тестовая отправка выполнена (1 аккаунт)\n\nТекст:\n" + message);
+}
+
+function startMassSend() {
+    const message = document.getElementById('messageText').value.trim();
+    if (!message) {
+        alert("Введите текст сообщения!");
+        return;
+    }
+    if (confirm("Запустить массовую рассылку?\n\nЭто действие нельзя отменить.")) {
+        alert("Рассылка запущена!\n\n(Функция в разработке)");
+    }
+}
+</script>
+{% endblock %}
