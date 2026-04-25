@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-light">Управление пользователями</h2>
+    <a href="{{ url_for('add_user') }}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Создать нового пользователя
+    </a>
+</div>
+
+<div class="card glass-card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Логин</th>
+                    <th>Роль</th>
+                    <th>Доступные вкладки</th>
+                    <th class="text-end">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>
+                        <span class="badge bg-{{ 'primary' if user.role=='admin' else 'secondary' }}">
+                            {{ user.role }}
+                        </span>
+                    </td>
+                    <td>
+                        {% for tab in user.allowed_tabs %}
+                        <span class="badge bg-dark me-1">{{ tab }}</span>
+                        {% endfor %}
+                    </td>
+                    <td class="text-end">
+                        {% if user.username != 'admin' %}
+                        <a href="{{ url_for('delete_user', username=user.username) }}" 
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Удалить пользователя {{ user.username }}?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
